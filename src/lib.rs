@@ -10,16 +10,23 @@ pub struct Parser {
 
 impl Parser {
     // Create a new Parser
-    pub fn build(args: &[String]) -> Result<Parser, &str> {
-        // Make sure that enough arguments are provided
-        if args.len() < 3 {
-            return Err("Error: Not enough arguments provided");
-        }
+    pub fn build(mut args: impl Iterator<Item = String>) -> Result<Parser, &'static str> {
+        args.next();
+
+        let query: String = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Error: Query not provided")
+        };
+
+        let source: String = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Error: Source not provided")
+        };
 
         // Return Parser with the correct fields set
         Ok(Parser {
-            query: args[1].clone(),
-            source: args[2].clone(),
+            query,
+            source,
             ignore_case: env::var("IGNORE_CASE").is_ok()
             })
     }
@@ -48,32 +55,21 @@ pub fn run(parser: Parser) -> Result<(), Box<dyn Error>> {
 
 // Search for the given query and return all the lines it appears in
 pub fn search<'a>(query: &str, source: &'a str) -> Vec<&'a str> {
-    let mut result = Vec::new();
-
     // Go through each line, check if the query appears and append it to the result
-    for line in source.lines() {
-        if line.contains(query) {
-          result.push(line);
-        }
-    }
-
-    result
+    source.lines().
+        filter(|line| line.contains(query))
+        .collect()
 }
 
 // Search for lines with given query, ignoring case of letters
 pub fn insensitive_search<'a>(query: &str, source: &'a str) -> Vec<&'a str> {
-    let mut result = Vec::new();
     // Shadow the query string to a lowercase one
     let query = query.to_lowercase();
 
     // Search and push lines containing the query to the result vector, ignoring the case
-    for line in source.lines() {
-        if line.to_lowercase().contains(query.as_str()) {
-            result.push(line);
-        }
-    }
-
-    result
+    source.lines().
+        filter(|line| line.to_lowercase().contains(query.as_str()))
+        .collect()
 }
 
 

@@ -5,10 +5,8 @@ use GrepTool::{run, Parser};
 
 
 fn main() {
-    // Get the arguments
-    let argv: Vec<String> = env::args().collect();
     // Parse arguments
-    let parser = Parser::build(&argv).unwrap_or_else(|err| {
+    let parser = Parser::build(env::args()).unwrap_or_else(|err| {
         eprintln!("Unable to Parse arguments, Error: {}", err);
         process::exit(-1);
     });
